@@ -6,6 +6,50 @@
     # Output: string (roman numeral)
     #E.g. 3331 -> "MMMCCCXXXI"
 
+# lets go with tests!
+# FRAMEWORK:
+##
+
+
+value_map = [
+      (1000, 'M'),
+      (900, 'CM'),  
+      (500, 'D'),
+      (400, 'CD'),
+      (100, 'C'),
+      (90, 'XC'),
+      (50, 'L'),
+      (40, 'XL'),
+      (10, 'X'),
+      (9, 'IX'),
+      (5, 'V'),
+      (4, 'IV'),
+      (1, 'I'),
+]
+
+def convertIntToRomanNumber(num: int)-> str:
+    RomanNumber = ""
+    for value, symbol in value_map:
+        multiple_symbol = num // value
+        if multiple_symbol:
+            RomanNumber += symbol * multiple_symbol
+            num -= (value * multiple_symbol)
+    return RomanNumber
+
+
+
+
+
+def main():
+    output = convertIntToRomanNumber(999)
+    print(output)
+
+main()
+
+
+
+
+
 #reverse:
 # 1 is I
 # 2 is II
@@ -32,6 +76,11 @@
 # 500 is D
 # 1000 is M
 
+# for each number in int_num:
+#    convert(number) -> roman_numeral
+
+
+
 # I is 1
 # V is 5
 # X is 10
@@ -42,6 +91,30 @@
 
 # 33 -> XXXIII == X + X + X + I + I + I == 10 + 10 + 10 + 1 + 1 + 1
 
+"""
+def convertIntToRomanNumber(num: int)-> str:
+    if num <= 0:
+        return "Input must be a positive integer"
+    if num == 1:
+        return "I"
+    if num == 2:
+        return "II"
+    if num == 3:
+        return "III"
+    if num == 4:   
+        return "IV"
+    if num == 5:   
+        return "V"
+    if num == 6:
+        return "VI"
+    if num == 7:
+        return "VII"
+    if num == 8:
+        return "VIII"
+    if num == 9:
+        return "IX"
+    else:
+        return "Number out of range"
 
 
 def int_to_roman(num)-> str:
@@ -82,8 +155,9 @@ def convertRomanNumbers(num: int)-> str:
         return "XL"
     if num == 50:
         return "L"
-    
-    
 
-#
-#
+"""
+
+
+
+
