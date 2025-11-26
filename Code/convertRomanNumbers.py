@@ -28,6 +28,13 @@ value_map = [
 ]
 
 def convertIntToRomanNumber(num: int)-> str:
+    
+    if not isinstance(num, int):
+        raise TypeError("Input must be an integer")
+
+    if num <= 0 or num > 3999:
+        raise ValueError("Input must be a positive integer between 1 and 3999")
+    
     RomanNumber = ""
     for value, symbol in value_map:
         multiple_symbol = num // value
@@ -37,11 +44,8 @@ def convertIntToRomanNumber(num: int)-> str:
     return RomanNumber
 
 
-
-
-
 def main():
-    output = convertIntToRomanNumber(999)
+    output = convertIntToRomanNumber(None)
     print(output)
 
 main()
