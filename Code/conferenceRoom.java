@@ -59,14 +59,41 @@ public class Statement {
       case COOKIES -> 15;
     };
 
-    boolean eligibleForDiscount = switch (item) {
+    public void rentCostsPerDay(CatalogItem item, int days) {
+        costs = calculateBaseCosts(item.unitPrice * days);
+        costs *= eligibleForDiscount(item, days);
+        tax = calculateTaxCosts(item, days)
+
+
+    // my new extracted methods code:
+    double eligibleForDiscount(CatalogItem item, int days) {
+        if item.is(SMALL_ROOM, LARGE_ROOM) & days >= 5 {
+            return 0.90
+        }
+        else return 1.0
+
+    int calculateBaseCosts(CatalogItem item, int days){
+        return item.unitPrice * days;
+    }
+
+    double calculateTaxCosts(item, days){
+        return item.taxRate * days;
+    }
+
+    // -> a bit more orderly than that:
+
+    }= switch (item) {
       case SMALL_ROOM, LARGE_ROOM -> days == 5;
       case PROJECTOR, COFFEE, COOKIES-> false;
     };
 
+
     int price = unitPrice * days;
 
+
+
     if (eligibleForDiscount) price = (int) Math.round(price * .9);
+
 
     subtotal += price;
     int thisTax = switch (item) {
@@ -77,6 +104,7 @@ public class Statement {
     tax += thisTax;
     items.add(new RentalItem(item, days, unitPrice, price, thisTax));
   }
+
 
   public RentalItem[] getItems() {
     List<RentalItem> items = new ArrayList<>(this.items);
@@ -89,9 +117,11 @@ public class Statement {
     return items.toArray(new RentalItem[0]);
   }
 
+
   public String getCustomerName() {
     return customerName;
   }
+
 
   public Totals getTotalCosts() {
     return new Totals(subtotal, tax);
