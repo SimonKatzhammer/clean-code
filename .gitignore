@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.env
+
+# VS Code workspace (personal config)
+/workspace/
+
+# pytest
+.pytest_cache/
