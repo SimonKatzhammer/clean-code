@@ -58,3 +58,42 @@
 # - If you define `for romanChar in ...` and then use `values[RomanChar]`,
 #   you get `NameError: name 'RomanChar' is not defined`.
 # - Rule: names must match exactly, including capitalization.
+
+
+# 6. `for char in string` vs `for i in range(len(string))`
+# --------------------------------------------------------
+# - `for char in "XIV":` gives you each character, but no way to peek ahead.
+# - `for i in range(len("XIV")):` gives you the index (0, 1, 2),
+#   so you can access string[i] AND string[i+1] (look-ahead).
+# - Use range(len(...)) when you need to compare adjacent elements.
+
+
+# 7. `range(n)` goes from 0 to n-1, not n
+# ----------------------------------------
+# - range(3) = 0, 1, 2
+# - len("XIV") = 3, valid indices = 0, 1, 2
+# - So range(len(s)) produces exactly the valid indices.
+# - Use `i+1 < len(s)` (not `<=`) to check if a next element exists.
+
+
+# 8. Python has no `i++`
+# ----------------------
+# - Use `i += 1` instead.
+# - Also: `i += 1` inside a `for i in range(...)` loop has NO EFFECT
+#   on the next iteration — the for loop controls `i`, not you.
+# - If you need to skip indices, use a `while` loop instead.
+
+
+# 9. Each `else` belongs to its nearest `if` at the same indent
+# -------------------------------------------------------------
+# - You cannot make an `else` "jump" to a different `if`.
+# - Python matches if/else strictly by indentation level.
+# - If you have nested ifs, each needs its own else if needed.
+
+
+# 10. Python integers can be negative
+# ------------------------------------
+# - `totalSum -= 1` is valid even if totalSum is 0 (result = -1).
+# - Useful for the look-ahead subtraction pattern in Roman numerals:
+#   "IV" → subtract I(1), then add V(5) → total = -1 + 5 = 4.
+# - Intermediate negative values are fine — the final result is correct.
