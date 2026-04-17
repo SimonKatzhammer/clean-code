@@ -97,3 +97,38 @@
 # - Useful for the look-ahead subtraction pattern in Roman numerals:
 #   "IV" → subtract I(1), then add V(5) → total = -1 + 5 = 4.
 # - Intermediate negative values are fine — the final result is correct.
+
+
+# 11. `sys.argv` — command-line arguments
+# ----------------------------------------
+# - `sys.argv` is a list of strings from the command line.
+# - sys.argv[0] = the script name (always present)
+# - sys.argv[1] = first argument, sys.argv[2] = second, etc.
+# - Example: `python romanNumeralConverter.py XIV`
+#     sys.argv[0] = "romanNumeralConverter.py"
+#     sys.argv[1] = "XIV"
+# - Requires `import sys` at the top of the file.
+
+
+# 12. `if __name__ == "__main__":` guard
+# --------------------------------------
+# - Runs the block only when the file is executed directly:
+#     python myfile.py         → __name__ is "__main__"  → runs
+#     from myfile import func  → __name__ is "myfile"    → skipped
+# - Without this guard, the code runs on import too (e.g. in tests).
+# - Standard pattern for CLI entry points:
+#     if __name__ == "__main__":
+#         print(myFunction(sys.argv[1]))
+
+
+# 13. `for pattern in list` + `if pattern in string`
+# ---------------------------------------------------
+# - `in` does two different things depending on context:
+#     for x in myList:       → iterates through the list
+#     if "IV" in "XIVIII":   → checks if substring exists
+# - Useful for validation: loop through bad patterns, check each one.
+# - Example:
+#     invalidPatterns = ["IIII", "VV", "IL"]
+#     for pattern in invalidPatterns:
+#         if pattern in romanNumeral:
+#             raise ValueError(f"Invalid: contains '{pattern}'")

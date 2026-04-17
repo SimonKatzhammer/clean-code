@@ -1,3 +1,4 @@
+
 # code -> tests
 # package FromRoman -> like a python folder / module
 
@@ -29,10 +30,19 @@ cd /Users/kaizen/Repositories/clean-code/Code
 
 """
 
-# values = {"I": 1, "V": 5, "X": 10, "L": 50, "C": 100}
+import sys
+
+
+def validateRomanNumeral(romanNumeral: str):
+  invalidPatterns = ["IIII", "XXXX", "VV", "LL", "CCCC", "IVI", "IXI", "LXL", "XCX", "IL", "IC", "IIV", "IIX"]
+  for pattern in invalidPatterns:
+    if pattern in romanNumeral:
+      raise ValueError(f"Invalid Roman numeral: contains '{pattern}'")
+  
 
 def convertRomanNumeralToInteger(romanNumeral: str) -> int:
   totalSum = 0
+  validateRomanNumeral(romanNumeral)
   values = {"I": 1, "V": 5, "X": 10, "L": 50, "C": 100}
   for i in range(len(romanNumeral)):
     if i+1 < len(romanNumeral):
@@ -44,13 +54,9 @@ def convertRomanNumeralToInteger(romanNumeral: str) -> int:
       totalSum += values[romanNumeral[i]]
   return totalSum
 
-"""
-def checkForNextCharSubstractIfSmaller(romanChar: str, i: int):
-  if values[romanChar[i+1]] < values[romanChar[i]]: 
-    integerValue = values[romanChar[i+1]] - values[romanChar[i]]
-  else: 
-    integerValue += values[romanChar[i]]
-  return integerValue
-"""  
-  
+
+
+if __name__ == "__main__":
+  print(convertRomanNumeralToInteger(sys.argv[1]))
+
   
