@@ -132,3 +132,57 @@
 #     for pattern in invalidPatterns:
 #         if pattern in romanNumeral:
 #             raise ValueError(f"Invalid: contains '{pattern}'")
+
+
+# 14. Unit tests live in a separate file
+# ---------------------------------------
+# - Convention: test_<module>.py next to the module it tests.
+# - pytest auto-discovers files matching `test_*.py` or `*_test.py`.
+# - Each test function name must start with `test_`.
+# - Run with `pytest` from the folder (no arguments needed).
+
+
+# 15. One concept per test
+# ------------------------
+# - Each test checks ONE behavior. Don't bundle unrelated assertions.
+# - If a test fails, the name should tell you what broke.
+# - Good:  test_IX_converts_to_9
+# - Bad:   test_conversion_works  (too vague — what exactly?)
+
+
+# 16. Arrange-Act-Assert (AAA) pattern
+# -------------------------------------
+# - Structure each test in 3 visible steps:
+#     input = "III"                                    # arrange
+#     result = convertRomanNumeralToInteger(input)     # act
+#     assert result == 3                               # assert
+# - For trivial tests, collapse into one line:
+#     def test_III_is_3(): assert convertRomanNumeralToInteger("III") == 3
+
+
+# 17. Test names should read like a spec
+# ---------------------------------------
+# - Format: test_<input>_<expected behavior>
+# - Examples:
+#     test_I_is_1
+#     test_IIII_is_rejected
+#     test_empty_string_raises_error
+# - Someone reading only the test names should understand what the code does.
+
+
+# 18. Test both happy path AND error cases
+# -----------------------------------------
+# - Don't just test valid inputs. Test that invalid inputs fail correctly.
+# - Use `pytest.raises(ExceptionType)` to assert an exception is raised:
+#     def test_IIII_is_rejected():
+#         with pytest.raises(ValueError):
+#             convertRomanNumeralToInteger("IIII")
+
+
+# 19. Running pytest
+# ------------------
+# - `pytest`                       → runs all test files in the folder
+# - `pytest test_file.py`          → runs one file
+# - `pytest -v`                    → verbose (shows each test name)
+# - `pytest -k "subtractive"`      → runs tests with keyword in name
+# - `pytest file.py::test_func`    → runs a single test function
