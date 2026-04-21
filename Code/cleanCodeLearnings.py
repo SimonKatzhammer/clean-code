@@ -186,3 +186,63 @@
 # - `pytest -v`                    → verbose (shows each test name)
 # - `pytest -k "subtractive"`      → runs tests with keyword in name
 # - `pytest file.py::test_func`    → runs a single test function
+
+
+# 20. Pure functions — the two rules
+# -----------------------------------
+# A function is "pure" if it satisfies BOTH:
+#   (a) Same input → same output (deterministic, no hidden dependencies)
+#   (b) No side effects (doesn't modify anything outside itself)
+#
+# Side effects include: printing, reading/writing files, network calls,
+# mutating global state, mutating input arguments, reading the clock, etc.
+#
+# - Pure:    def add(a, b): return a + b
+# - Impure:  def greet(name): return f"hi {name} at {datetime.now()}"  # clock
+# - Impure:  def addItem(lst, x): lst.append(x); return lst            # mutates input
+
+
+# 21. Why purity matters in practice
+# -----------------------------------
+# - Easier to test: give input, check output. No mocks, no setup.
+# - Easier to debug: bugs are local — check the inputs, not 5 other systems.
+# - Safe to parallelize: no shared state = no race conditions.
+# - Portable: works anywhere because it depends only on its arguments.
+# - Honest signature: inputs + return value tell you EVERYTHING it does.
+
+
+# 22. Internal mutation doesn't break external purity
+# ----------------------------------------------------
+# - A function can mutate local variables and still be pure.
+# - What matters is what the OUTSIDE WORLD can observe.
+# - Example (pure despite mutating `total`):
+#     def sumList(numbers):
+#         total = 0
+#         for n in numbers:
+#             total += n        # internal mutation, invisible to caller
+#         return total
+# - This is why Uncle Bob's FromRoman.convert() is pure:
+#   the object mutates itself internally, but is thrown away after each call.
+#   From outside: convert("XIV") always returns 14, no side effects.
+
+
+# 23. Push side effects to the edges
+# -----------------------------------
+# - Real software NEEDS side effects (I/O, state, etc.).
+# - The useful pattern: keep the CORE LOGIC pure, do I/O at the boundary.
+#   [edge: read input] → [PURE: compute] → [edge: print/save result]
+# - In romanNumeralConverter.py:
+#     convertRomanNumeralToInteger()  ← pure core (no print, no file)
+#     if __name__ == "__main__":      ← impure edge (reads sys.argv, prints)
+
+
+# 24. Objects as "scratchpads" for helper methods
+# ------------------------------------------------
+# - When many small helpers need to share state, passing it as arguments
+#   everywhere gets ugly.
+# - A class can hold that state as instance variables — helpers read/write
+#   them instead of passing long parameter lists.
+# - If the object is created fresh per call and thrown away, the outer
+#   function stays pure even though the helpers mutate instance variables.
+# - Tradeoff: small perf cost (allocation + GC) for readability.
+#   Worth it unless you're writing embedded / real-time / game engine code.
