@@ -246,3 +246,41 @@
 #   function stays pure even though the helpers mutate instance variables.
 # - Tradeoff: small perf cost (allocation + GC) for readability.
 #   Worth it unless you're writing embedded / real-time / game engine code.
+
+
+# 25. Python import ordering (PEP 8 / isort)
+# -------------------------------------------
+# - Imports are grouped into 4 groups, separated by blank lines:
+#     1. __future__         e.g. `from __future__ import annotations`
+#     2. Standard library   e.g. `json`, `logging`, `os`
+#     3. Third-party        e.g. `httpx`, `pytest`, `pandas`
+#     4. First-party        your own project packages
+# - Blank line between groups makes external vs internal deps visible at a glance.
+# - Auto-enforced by tools like `ruff` / `isort` — you don't choose by hand.
+# - Config lives in `pyproject.toml`:
+#     [tool.ruff.lint.isort]
+#     known-first-party = ["intellegam", "agents", "cli"]
+# - Fix with: `ruff format` or `ruff check --fix`
+
+
+# 26. "When is it enough?" — the three-lens test heuristic
+# ---------------------------------------------------------
+# - Coverage % is a metric; SCENARIOS are what actually matter.
+# - For any function, walk through three lenses before shipping:
+#
+#     ┌──────────────────────────┬───────────────────────────────────────┐
+#     │ Lens                     │ Question                              │
+#     ├──────────────────────────┼───────────────────────────────────────┤
+#     │ 1. Happy path            │ Does the main use case work E2E?      │
+#     │ 2. Known failure modes   │ What specific failures should         │
+#     │                          │ degrade gracefully?                   │
+#     │ 3. Input/output boundary │ Are the edges of the contract         │
+#     │                          │ respected? (malformed → "", not crash)│
+#     └──────────────────────────┴───────────────────────────────────────┘
+#
+# - Example for a `scrape()` HTTP function:
+#     1. Happy path        → expected body + return value
+#     2. Failure modes     → 4xx/5xx, JSON decode errors, transport errors
+#     3. Boundary          → malformed schemas return "" instead of crashing
+# - Rule of thumb: if you can't answer all three, you haven't tested enough.
+#   If you CAN answer all three, you're probably done — don't chase 100%.
