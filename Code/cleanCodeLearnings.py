@@ -503,3 +503,85 @@
 # Why the label matters: once you have a name for the structure, you
 # notice when tests are missing it. Tests without clear AAA tend to
 # read chaotically; tests with it scan cleanly.
+
+
+# 33. BDD basics — testing in plain language
+# -------------------------------------------
+# BDD = Behavior-Driven Development. Style of writing tests that focuses
+# on describing behavior in natural language rather than implementation.
+# Coined by Dan North (~2003-2006), evolved out of TDD.
+#
+# Same skeleton as AAA, different vocabulary:
+#       Given  ↔  Arrange   (the world is in state X)
+#       When   ↔  Act       (something happens)
+#       Then   ↔  Assert    (we expect outcome Y)
+#
+# Two flavors:
+#   - BDD-style code: just rename your AAA comments to Given/When/Then.
+#     Still a plain unit test, just structured for readability.
+#   - Full BDD with Gherkin/Cucumber: scenarios live in a separate
+#     `.feature` file in natural language; framework maps each line
+#     to a step function. Non-devs can read/write the .feature file.
+#
+# Example .feature:
+#     Feature: Free cookie bonus
+#       Scenario: Renting a large room with coffee for a week
+#         Given a fresh order
+#         When I rent a LARGE_ROOM for 5 days
+#         And I rent COFFEE for 5 days
+#         Then the receipt should have 3 items
+#         And the receipt should contain free COOKIES
+#
+# Central claim: most bugs are misunderstanding, not coding errors.
+# A shared natural-language spec catches misalignment between PM,
+# designer, and engineer earlier than code review would.
+#
+# When it's worth the ceremony:
+#   ✅ Non-technical stakeholders need to verify behavior
+#   ✅ Complex acceptance criteria that should be living docs
+#   ❌ Solo dev, internal libs, algorithmic code — overkill
+
+
+# 34. BDD + agentic coding — research findings (as of 2026)
+# ----------------------------------------------------------
+# Pairing BDD with LLM agents is an active, promising research area.
+# Key results published in 2025-2026:
+#
+# - BDDCoder (multi-agent framework, 4 roles: Programmer/Tester/
+#   Requirements Analyst/User): feeding executable Gherkin scenarios
+#   to the agent outperforms natural-language scenarios by up to 15.1%
+#   on Pass@1 scores. Closed feedback loop ("does this test pass?")
+#   beats open-ended prose requirements.
+#
+# - Industrial case (automotive): 95% of LLM-generated acceptance
+#   scenarios rated "helpful" by engineers; 92% of generated scripts
+#   were usable. Bottleneck = input quality, not generation quality.
+#
+# - Sloppy-input failure mode: without explicit rules, AI-generated
+#   Gherkin drifts into vague Thens, UI-heavy scripts, multi-behavior
+#   scenarios, placeholder examples. The fix is a Gherkin style guide
+#   fed to the agent as context (see automationpanda's published
+#   "gherkin-guidelines-for-ai").
+#
+# - Model-specific prompting matters:
+#     Claude → chain-of-thought
+#     GPT-4  → zero-shot
+#     Gemini → few-shot
+#
+# - Emerging label "Spec-Driven Development (SDD)" = BDD applied
+#   specifically to LLM-agent workflows.
+#
+# Why it fits agents structurally:
+#   - Given/When/Then is literally the format LLMs are best at:
+#     natural language + structure.
+#   - Executable scenarios are the highest-bandwidth way to express
+#     intent without writing the code yourself.
+#   - It solves the "did I build the right thing?" failure mode —
+#     the WORST failure mode with agents that generate fast and
+#     plausibly-wrong.
+#
+# Lightweight personal adoption (no Cucumber, no .feature files):
+#   When starting a feature with an agent, write the request as
+#   Given/When/Then before asking for code. That alone captures
+#   most of the benefit. The ceremony of full BDD tooling is
+#   optional; the discipline of writing specs first is the lever.
