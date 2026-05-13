@@ -284,3 +284,132 @@
 #     3. Boundary          → malformed schemas return "" instead of crashing
 # - Rule of thumb: if you can't answer all three, you haven't tested enough.
 #   If you CAN answer all three, you're probably done — don't chase 100%.
+
+
+# 27. Dependency Inversion Principle (DIP) — web_fetch case study
+# ----------------------------------------------------------------
+# Rule: "High-level policy should not depend on low-level details.
+#        Both should depend on abstractions."
+#
+# Common misread: "they shouldn't depend on each other."
+# Precise version: NEITHER knows the other exists; BOTH point UP at a
+# shared contract.
+#
+# ── Today's web_fetch (violates DIP) ──────────────────────────────
+#
+#   web_fetch.py (policy)
+#       │
+#       │ imports
+#       ▼
+#   httpx.HTTPError, FirecrawlTargetSiteError, SecretProviderError, ...
+#       (low-level concrete types from firecrawl, env, httpx)
+#
+# Symptom in the code:
+#     except httpx.HTTPError as e:           → retry prompt
+#     except FirecrawlTargetSiteError as e:  → target-error prompt
+#     except SecretProviderError as e:       → ??? (kept flipping)
+#
+# The policy ("is this retriable?") needs SEMANTIC info, but reads it
+# from low-level TYPES that don't carry that meaning. SecretProviderError
+# alone can't tell you if it's a bad password (permanent) or a timeout
+# (transient). That ambiguity caused the iteration loop with Codex.
+# Swap Firecrawl → Brave, or Infisical → AWS Secrets, and every except
+# clause has to be rewritten.
+#
+# ── Inverted version (follows DIP) ────────────────────────────────
+#
+#                  ┌────────────────────────────────┐
+#                  │  abstract error contract:      │
+#                  │   TransientFetchError          │
+#                  │   PermanentFetchError          │
+#                  │   TargetSiteError              │
+#                  └─────────▲─────────────▲────────┘
+#                            │             │
+#                     depends│             │implements / raises
+#                            │             │
+#                     ┌──────┴──────┐ ┌────┴───────────┐
+#                     │ web_fetch   │ │ firecrawl.py   │
+#                     │ (policy)    │ │ env.py         │
+#                     └─────────────┘ └────────────────┘
+#
+# Now web_fetch only catches the abstract types:
+#     except TransientFetchError: → service-unavailable prompt
+#     except PermanentFetchError: → config-invalid prompt
+#     except TargetSiteError:     → target-error prompt
+#
+# The PROVIDER decides "is SecretProviderError(auth=bad) permanent or
+# SecretProviderError(timeout) transient?" — because it has the context.
+# web_fetch doesn't need to know.
+#
+# ── Why one-way coupling is already a violation ───────────────────
+# - web_fetch imports firecrawl ✓
+# - firecrawl does NOT import web_fetch ✗
+# This is one-way coupling, not mutual. DIP is still violated because
+# the arrow goes high → low. The fix is NOT making firecrawl import
+# web_fetch (that's circular and worse) — it's introducing a third
+# module both can point UP at.
+#
+# ── When to actually do the inversion ──────────────────────────────
+# - With ONE provider (one scraper, one secret backend), the abstraction
+#   tax can exceed the benefit. "Three similar lines > premature abstraction."
+# - It pays off when:
+#     • ≥2 providers (Firecrawl AND Brave both have env-classification issues)
+#     • Low-level churn keeps forcing high-level rewrites
+#     • The policy keeps misclassifying because the type can't carry the
+#       semantic distinction (the SecretProviderError flip-flop)
+# - Today: hard-coding is defensible. The iteration loop is the warning sign.
+
+
+# 28. Records and Python's @dataclass — "data-only" carriers
+# -----------------------------------------------------------
+# UML diagrams in Clean Code use bubbles labeled:
+#   C = Class       (data + behavior)
+#   I = Interface   (contract only, no implementation)
+#   R = Record      (data only, immutable, no behavior)
+#
+# A "record" is a labeled bag of values. No business logic, no mutation.
+# Just fields you declared + auto-generated equals/hashCode/toString.
+#
+# ── Java ──
+#   public record RentalItem(String type, int days, int unitPrice) { }
+#
+# ── Python equivalent: @dataclass ──
+#   from dataclasses import dataclass
+#
+#   @dataclass(frozen=True)
+#   class RentalItem:
+#       type: str
+#       days: int
+#       unitPrice: int
+#
+# What @dataclass auto-generates for you:
+#   - __init__         → RentalItem("PROJECTOR", 2, 50)
+#   - __repr__         → print(item) shows all fields nicely
+#   - __eq__           → value equality (two records with same fields are ==)
+#   - __hash__         → usable as dict keys / in sets (when frozen)
+#
+# Useful flags:
+#   @dataclass(frozen=True)   → immutable (assigning a field raises)
+#   @dataclass(order=True)    → adds <, <=, >, >= comparing fields
+#   @dataclass(slots=True)    → smaller memory, faster attribute access (3.10+)
+#   @dataclass(kw_only=True)  → constructor requires keyword args (3.10+)
+#
+# Mutable defaults trap:
+#   @dataclass
+#   class Item:
+#       tags: list[str] = []          # ❌ shared across ALL instances
+#       tags: list[str] = field(default_factory=list)   # ✅ fresh list each time
+#
+# When to reach for what:
+#   - @dataclass               → default answer for data carriers
+#   - @dataclass(frozen=True)  → records / value objects (Java-record-like)
+#   - typing.NamedTuple        → immutable, also indexable like a tuple
+#   - pydantic.BaseModel       → when you need runtime validation / JSON
+#   - plain dict               → when shape is dynamic or untyped
+#
+# When NOT to use @dataclass:
+#   - The class has substantial behavior → that's a regular class
+#   - You need extreme perf in hot loops → consider tuples or slots
+#
+# Mental model: a paper form with named fields. You fill in the blanks,
+# pass it around, read it. You don't ask it to DO anything.
