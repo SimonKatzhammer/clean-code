@@ -413,3 +413,93 @@
 #
 # Mental model: a paper form with named fields. You fill in the blanks,
 # pass it around, read it. You don't ask it to DO anything.
+
+
+# 29. Test fundamentals — every line earns its place
+# ---------------------------------------------------
+# Tests are the executable specification of the system. Every choice
+# answers ONE question: "when this fails three years from now, will the
+# engineer reading it know what broke and what the system should do?"
+#
+# Anatomy of a well-formed test, line by line:
+#
+#   @Test                  / def test_*    → framework discovery hook
+#   long behavioral name   → encodes scenario + EXPECTED OUTCOME
+#   Arrange (setup state)  → minimum needed to trigger behavior
+#   Act    (do the thing)  → ONE call, stored in a local for clarity
+#   Assert (verify)        → length/structure first, then contents
+#
+# Naming rule: name = scenario + outcome.
+#   - BAD:   testReceipt1
+#   - OK:    oneLargeRoomAndCoffeeForWeekGetsCookies
+#   - GOOD:  oneLargeRoomAndCoffeeForWeekGetsFreeCookieBonus
+#   The word "free"/"bonus" makes the BUSINESS RULE explicit, not the
+#   user-observable outcome alone.
+#
+# Why hard-code expected values (e.g. 675, 34) instead of recomputing:
+#   if the test re-derives expected from the same logic as the code,
+#   both can be wrong together and the test still passes. Literal
+#   constants pin the human's intent.
+#
+# Why assert length BEFORE indexing into the array:
+#   wrong length → IndexOutOfBounds on subsequent assertions = confusing
+#   failure. Asserting length first produces "expected 3, got 2" =
+#   clear failure.
+#
+# When to split a test:
+#   Split when the two halves test INDEPENDENTLY MEANINGFUL behaviors.
+#   Don't split when the value IS in the interaction between the parts.
+#   The "one assertion per test" rule really means "one CONCEPT per
+#   test" — multiple assertions verifying parts of the same fact is fine.
+
+
+# 30. Test discovery: annotations vs naming conventions
+# ------------------------------------------------------
+# Frameworks need to know which methods are tests. Two strategies:
+#
+#   Java/JUnit:     @Test annotation on the method
+#   Python/pytest:  function name starts with `test_`,
+#                   file name starts with `test_` (or ends `_test.py`)
+#
+# Tradeoff:
+#   - Annotations: explicit, compiler-checked, rename-safe.
+#   - Conventions: zero boilerplate, but rename → test silently excluded.
+# Both achieve the same goal — match the language's idiom.
+
+
+# 31. Language naming conventions
+# --------------------------------
+# Match the language's convention; mixing styles looks jarring to readers.
+#
+#   ┌──────────────┬─────────────────┬──────────────────┐
+#   │              │ Java / JS / C#  │ Python / Ruby    │
+#   ├──────────────┼─────────────────┼──────────────────┤
+#   │ Class        │ PascalCase      │ PascalCase       │
+#   │ Method/Func  │ camelCase       │ snake_case       │
+#   │ Variable     │ camelCase       │ snake_case       │
+#   │ Constant     │ UPPER_SNAKE     │ UPPER_SNAKE      │
+#   │ Package      │ lowercase.dot   │ lowercase_snake  │
+#   └──────────────┴─────────────────┴──────────────────┘
+#
+# Not technically wrong to mix, but a Python reader sees camelCase func
+# names as "this person came from Java." Idiomatic Python would write
+# `convert_roman_numeral_to_integer` not `convertRomanNumeralToInteger`.
+
+
+# 32. AAA / Given-When-Then — origin and meaning
+# -----------------------------------------------
+# Two unrelated "AAA"s:
+#   - Video games "AAA": from bond credit ratings (AAA = top tier).
+#     Pure marketing language for high-budget titles. Early '90s.
+#   - Testing "AAA": Arrange / Act / Assert. Coined ~2001 by Bill Wake,
+#     popularized by the TDD community.
+#
+# Same structure in BDD:
+#       AAA               BDD
+#       Arrange      ↔    Given (the world is in state X)
+#       Act          ↔    When  (something happens)
+#       Assert       ↔    Then  (we expect outcome Y)
+#
+# Why the label matters: once you have a name for the structure, you
+# notice when tests are missing it. Tests without clear AAA tend to
+# read chaotically; tests with it scan cleanly.
