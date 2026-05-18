@@ -585,3 +585,106 @@
 #   Given/When/Then before asking for code. That alone captures
 #   most of the benefit. The ceremony of full BDD tooling is
 #   optional; the discipline of writing specs first is the lever.
+
+
+# 35. Interface vs concrete class, and why we don't prefix with "I"
+# -----------------------------------------------------------------
+# Vocabulary first:
+#   - Interface = the CONTRACT. "Anything calling itself X must
+#     have these methods." It doesn't say HOW, only WHAT.
+#   - Concrete class = the actual IMPLEMENTATION. Real code that
+#     fulfills the contract.
+#   - Factory = a class whose job is to CREATE other objects.
+#     Useful when construction is complex or you want to swap
+#     implementations.
+#   - Encoding (as in "type encoding") = baking the type into
+#     the NAME. Examples: IShapeFactory (I = interface),
+#     strName (str = string), m_count (m_ = member variable).
+#     Redundant noise — the language already tells you the type.
+#   - "Unadorned" = no prefix/suffix decoration. Plain name.
+#
+# Python example:
+#   class ShapeFactory:                  # the interface (contract)
+#       def make(self, kind: str): ...   # ... = subclass fills in
+#
+#   class CircleFactory(ShapeFactory):   # the concrete class
+#       def make(self, kind: str):
+#           return Circle(radius=10)     # real working code
+#
+# Bob's rule: leave INTERFACES unadorned (ShapeFactory, not
+# IShapeFactory). If you must mark something, mark the
+# IMPLEMENTATION (ShapeFactoryImpl).
+#
+# Why? The whole point of an interface is that callers DON'T
+# need to know it's an interface. They should treat it as
+# "a thing that makes shapes" — could be real, mocked, swapped
+# later. Naming it IShapeFactory leaks "this is an abstraction!"
+# into every caller. The abstraction works best when invisible.
+
+
+# 36. Keyword-only parameters in Python — the bare `*`
+# -----------------------------------------------------
+# Python supports BOTH positional and keyword arguments:
+#   greet("Sam", "Hi")               # positional — order matters
+#   greet(name="Sam", greeting="Hi") # keyword — explicit
+#
+# Problem: positional booleans/None at call sites are mystery values:
+#   sort(pets, None, True)   # what does True mean here??
+#
+# Solution: force callers to name the optional args using `*`:
+#   def sort(iterable, *, key=None, reverse=False):
+#                      ^
+#                      bare * = "everything after me MUST be keyword"
+#
+# Now:
+#   sort(pets, None, True)        # ❌ TypeError
+#   sort(pets, reverse=True)      # ✅ self-documenting at call site
+#   sort(pets, key=age_fn)        # ✅
+#   sort(pets)                    # ✅ uses defaults
+#
+# Why: the language refuses to let callers write opaque code.
+# Same spirit as "avoid magic numbers" but enforced by the
+# function signature itself.
+#
+# Rule of thumb:
+#   - Positional → the main thing the function operates on
+#     (iterable, text, user)
+#   - Keyword-only → options, flags, configuration
+#     (anything where the call site benefits from being named)
+
+
+# 37. Problem domain vs solution domain names
+# --------------------------------------------
+# Two VOCABULARIES you can pull names from:
+#
+#   PROBLEM DOMAIN          | SOLUTION DOMAIN
+#   ------------------------|--------------------------
+#   Words your CUSTOMER     | Words your fellow
+#   uses                    | PROGRAMMERS use
+#   What the software does  | How the software works
+#   in the real world       | internally
+#   Account, Patient,       | Queue, HashMap, Visitor,
+#   Cart, Order             | Cache, Factory, FIFO
+#
+# Same app, both vocabularies coexist. Pizza delivery example:
+#   class Pizza: ...           # problem domain
+#   class Order: ...           # problem domain
+#   class Customer: ...        # problem domain
+#   class OrderQueue: ...      # mixed — Order (problem) + Queue (solution)
+#   class PizzaCache: ...      # mixed — Pizza (problem) + Cache (solution)
+#   class OrderFactory: ...    # mixed — Order (problem) + Factory (pattern)
+#
+# Bob's argument: when something IS fundamentally a CS concept
+# (queue, cache, visitor, factory), USE the CS name. Don't
+# dress it up in business terms like PendingOrdersList — that
+# forces other programmers to decode what it really is.
+#
+# Rule:
+#   - High level (the WHAT): problem domain.
+#     e.g. Account.deposit(amount), Patient.diagnose()
+#   - Low level (the HOW): solution domain.
+#     e.g. OrderQueue, EventBus, PatientRepository
+#
+# Principle: name things at the level of abstraction they
+# actually operate at. A queue of orders IS a queue —
+# hiding that helps no one.
