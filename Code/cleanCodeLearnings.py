@@ -688,3 +688,215 @@
 # Principle: name things at the level of abstraction they
 # actually operate at. A queue of orders IS a queue —
 # hiding that helps no one.
+
+
+# 38. The disambiguation test for variable names
+# -----------------------------------------------
+# A name only needs as much detail as is required to
+# DISTINGUISH it from siblings in its scope.
+#
+# Test: if I had two of these in this function, what would
+# I call them? If you can't easily think of a sibling that
+# would need a different name, you don't need the suffix.
+#
+# Examples:
+#   verb               vs verbForOutputString
+#                      → no sibling verb exists, suffix is noise
+#   price              vs priceInCents
+#                      → priceInDollars could coexist, suffix earns it
+#   userId             vs userIdString
+#                      → could also be int, suffix earns it
+#   input              vs rawInput, cleanedInput
+#                      → pipeline stages coexist, suffix earns it
+#
+# Where the "why" of a variable actually lives:
+#   1. The FUNCTION NAME carries the macro why (e.g. printSentence
+#      → all variables inside are sentence pieces).
+#   2. The shape of the code (variables next to a format string
+#      → reader recognizes "sentence parts").
+#   3. Comments — only when the why is hidden from context.
+#
+# Long variable names signal "pay attention, this is non-obvious."
+# Short names signal "trust the context." Use long names where
+# ambiguity exists; short names where context already provides it.
+#
+# If a single variable needs to explain itself loudly, the
+# FUNCTION is probably doing too much. Tighten the function,
+# and the variables can stay short.
+
+
+# 39. One name = one concept (don't overload a variable)
+# -------------------------------------------------------
+# A single variable should hold ONE thing throughout its life.
+# If it changes meaning halfway through a function, that's
+# two concepts wearing one name. The cure is two names.
+#
+# ❌ Bad — variable changes type/meaning mid-function:
+#   def f(nameCount: int):
+#       ...
+#       nameCount = str(nameCount)   # now it's a string!
+#       # readers must mentally track: int here, string after
+#
+# ✅ Good — two names for two concepts:
+#   def f(nameCount: int):
+#       ...
+#       nameNumber = str(nameCount)  # int input → string output
+#
+# Reassignment to a different type is a SMELL. It reads like
+# a workaround. `nameNumber = str(nameCount)` reads like intent.
+#
+# This mirrors the Java/Clean Code distinction:
+#   `count` (int)  — the number
+#   `number` (str) — the WORD for the number in a sentence
+# Two concepts, two names. Not redundant — correct.
+
+
+# 40. Fail fast: validate at the top, then trust the body
+# --------------------------------------------------------
+# When input can be invalid, GUARD AT THE TOP of the function
+# and raise. Don't paper over bad input deeper in the logic.
+#
+# Pattern:
+#   def f(nameCount: int):
+#       if nameCount < 0:
+#           raise ValueError(f"nameCount must be >= 0, got {nameCount}")
+#       # from here on, nameCount is guaranteed valid
+#       ...main logic...
+#
+# Why raise instead of `print("something went wrong")`?
+#   - print() lets the function continue and produce garbage;
+#     the caller never knows it failed.
+#   - raise stops execution immediately. The caller is FORCED
+#     to acknowledge the bad input.
+#
+# Why at the top, not in a catch-all else?
+#   - Mixing validation with main logic creates confusing branches.
+#   - A guard at the top means the rest of the function can ASSUME
+#     the input is valid — less branching, simpler code.
+#
+# Watch out for "unreachable" else branches that look like
+# validation but aren't:
+#   if x <= 1: ...           # 0 and 1
+#   elif x > 1: ...          # 2+
+#   else: print("invalid")   # ← unreachable! x<=1 false ⇒ x>1 true.
+#                            #   Negatives went into the FIRST branch.
+# That "validation" never fires. The guard belongs at the top.
+
+
+# 41. Python idioms you'll keep forgetting (and shouldn't)
+# ---------------------------------------------------------
+# - `elif`, not `else if`. One word. `else if` is Java/JS/C.
+# - `else` cannot take a condition. `else (x > 1):` is invalid.
+#   Use `elif x > 1:` if you need a condition.
+# - `if (x <= 1):` works but the parens are noise. Idiomatic:
+#   `if x <= 1:`. Parens earn their keep only for line breaks
+#   in long conditions or for grouping precedence.
+# - PEP 8 indent = 4 spaces. Mixing 2 and 4 in one file reads
+#   like sloppy translation. Pick one (4) and stick with it.
+# - `def name:` is a SyntaxError. Functions/methods always
+#   need `()`, even if empty: `def name():`.
+# - Triple-quote `""" ... """` is a STRING LITERAL, not a
+#   comment. Wrapping old code in `""" """` makes it dead
+#   weight (runtime no-op string), not a real comment block.
+#   Use `#` line-by-line for true comments, or just delete.
+
+
+# 42. Python class basics: self, instance attrs, annotations
+# -----------------------------------------------------------
+# Three rules that trip up newcomers:
+#
+# 1. Every instance method needs `self` as first parameter.
+#    Python passes the instance automatically when you call
+#    a method on an instance:
+#        msg.craft()        # Python passes `msg` as self
+#
+# 2. To READ or WRITE class state, you MUST go through `self.`.
+#    A bare `nameNumber = "kein"` inside a method creates a
+#    LOCAL variable that disappears when the method returns.
+#    `self.nameNumber = "kein"` writes to the instance.
+#
+# 3. Class-level type annotations do NOT create attributes.
+#       class Msg:
+#           nameNumber: str          # ← annotation only
+#       m = Msg()
+#       m.nameNumber                  # AttributeError!
+#    The annotation declares a type contract. The actual
+#    attribute exists only after something assigns it:
+#    `self.nameNumber = "..."` inside a method, or via
+#    `__init__`, or `m.nameNumber = "..."` from outside.
+#
+# Minimal correct class:
+#   class Greeter:
+#       name: str
+#
+#       def setName(self, value: str):
+#           self.name = value
+#
+#       def greet(self):
+#           print(f"Hi {self.name}")
+#
+#   g = Greeter()
+#   g.setName("Anna")    # creates the attribute
+#   g.greet()            # reads it via self.name
+
+
+# 43. Build vs output separation (Bob's class refactor)
+# ------------------------------------------------------
+# Bob's GuessStatisticsMessage refactor unlocks several wins
+# at once. Worth naming each:
+#
+# A. CLASS instead of free function.
+#    State (number/verb/pluralModifier) moves from locals
+#    into FIELDS. Helpers can now write to them without
+#    returning tuples — no parameter-passing gymnastics.
+#
+# B. BUILD vs OUTPUT split.
+#    `make(...)` RETURNS the string; it doesn't print.
+#    The caller decides what to do with the message
+#    (print, log, send, test). A function that builds AND
+#    emits is doing two things.
+#
+# C. ONE METHOD PER CASE.
+#    Instead of one block with three branches, three tiny
+#    methods named in PROSE:
+#       thereAreNoLetters()
+#       thereIsOneLetter()
+#       thereAreManyLetters(count)
+#    The dispatcher now reads like English:
+#       if count == 0:   thereAreNoLetters()
+#       elif count == 1: thereIsOneLetter()
+#       else:            thereAreManyLetters(count)
+#    Branches no longer just DO something — they ANNOUNCE
+#    what they're doing via their name.
+#
+# This is the Stepdown Rule applied to BRANCHES:
+# each level of the if-chain reads like a sentence,
+# and the details live one level deeper.
+
+
+# 44. Running Python: REPL vs argv vs input()
+# --------------------------------------------
+# Three ways to feed inputs to a file you're testing:
+#
+# 1. REPL with file pre-loaded — best for exploration:
+#       python -i file.py
+#    Drops you into an interactive prompt with everything
+#    from `file.py` already imported. Call functions with
+#    different inputs without re-launching.
+#
+# 2. Command-line arguments via sys.argv — best for one-off
+#    invocations:
+#       if __name__ == "__main__":
+#           name = sys.argv[1]
+#           count = int(sys.argv[2])   # always strings — convert!
+#           f(name, count)
+#       $ python file.py Anna 5
+#
+# 3. input() prompts — best for guided interactive flow:
+#       name = input("Name: ")
+#       count = int(input("Count: "))
+#
+# `if __name__ == "__main__":` MUST live at module level
+# (0 indent), not inside a class. Indented inside a class
+# it becomes part of the class body and won't run when the
+# file is executed directly.
